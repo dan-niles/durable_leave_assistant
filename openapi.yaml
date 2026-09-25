@@ -1,0 +1,120 @@
+openapi: 3.0.1
+info:
+  title: Durable Leave Assistant
+  version: 0.1.0
+paths:
+  /requests:
+    post:
+      operationId: startLeaveRequest
+      summary: Start a leave request and return its instance ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeaveRequest"
+            example:
+              employeeId: E-3001
+              message: Please book 4 days of annual leave starting 2026-10-05.
+      responses:
+        "201":
+          description: The request was started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestRef"
+  /requests/{instanceId}:
+    get:
+      operationId: getLeaveRequest
+      summary: Get the status and final answer of a leave request
+      parameters:
+        - $ref: "#/components/parameters/instanceId"
+      responses:
+        "200":
+          description: The request status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestStatus"
+  /requests/{instanceId}/approvals:
+    get:
+      operationId: listApprovals
+      summary: List approvals waiting for a manager
+      parameters:
+        - $ref: "#/components/parameters/instanceId"
+      responses:
+        "200":
+          description: Pending approvals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+  /approvals/{taskId}:
+    post:
+      operationId: decideApproval
+      summary: Approve or reject a pending booking
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-user-role
+          in: header
+          required: true
+          schema:
+            type: string
+            example: manager
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewDecision"
+            example:
+              action: proceed
+              feedback: Approved, enjoy!
+      responses:
+        "202":
+          description: The decision was recorded
+components:
+  parameters:
+    instanceId:
+      name: instanceId
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    LeaveRequest:
+      type: object
+      required: [employeeId, message]
+      properties:
+        employeeId:
+          type: string
+        message:
+          type: string
+    RequestRef:
+      type: object
+      properties:
+        instanceId:
+          type: string
+    RequestStatus:
+      type: object
+      properties:
+        status:
+          type: string
+        answer:
+          type: string
+          nullable: true
+    ReviewDecision:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [proceed, proceed-with-input, reject]
+        feedback:
+          type: string

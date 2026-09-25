@@ -1,0 +1,9 @@
+[package]
+org = "danniles"
+name = "durable_leave_assistant"
+version = "0.1.0"
+title = "Durable Leave Assistant"
+distribution = "2201.13.4"
+
+[build-options]
+observabilityIncluded = true
